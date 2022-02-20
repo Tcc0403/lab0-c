@@ -200,7 +200,7 @@ bool q_delete_dup(struct list_head *head)
         return false;
     element_t *e, *s;
     list_for_each_entry_safe (e, s, head, list)
-        if (strcmp(e->value, s->value) == 0) {
+        if (&s->list != head && strcmp(e->value, s->value) == 0) {
             list_del(&e->list);
             q_release_element(e);
         }
@@ -249,31 +249,45 @@ void q_reverse(struct list_head *head)
     head->prev = tmp;
 }
 
-// bool list_sorted(struct list_head *head)
+void merge(struct list_head *H1, struct list_head *H2)
+{
+    element_t *E1, *E2;
+    struct list_head *node1 = H1->next, *node2 = H2->next, *next_node;
+    for (; !list_empty(H2); node2 = next_node) {
+        while (node1 != H1) {
+            E1 = list_entry(node1, element_t, list);
+            E2 = list_entry(node2, element_t, list);
+            if (strcmp(E1->value, E2->value) < 0)
+                node1 = node1->next;
+            else
+                break;
+        }
+        if (node1 == H1)
+            list_splice_tail_init(H2, H1);
+        else {
+            next_node = node2->next;
+            list_del_init(node2);
+            list_add_tail(node2, node1);
+        }
+    }
+}
+// void merge(struct list_head *head, struct list_head *head2)
 // {
-//     element_t *e, *s;
-//     list_for_each_entry_safe (e, s, head, list) {
-//         if (strcmp(e->value, s->value) > 0)
-//             return false;
-//     }
-//     return true;
-// }
-
-// struct list_head *mergeTwoList(struct list_head *H1, struct list_head *H2)
-// {
-//     element_t *E1, *E2, *S1, *S2;
-//     list_for_each_entry_safe (E1, S1, H1, list) {
-//         list_for_each_entry_safe (E2, S2, H2, list) {
-//             if (strcmp(E1->value, E2->value) < 0) {
-//                 if (strcmp(S1->value, E2->value) > 0) {
-//                     list_del(&E2->list);
-//                     list_add(&E2->list, &E1->list);
-//                 }
-//             }
-//             break;
+//     struct list_head *i_head = head->next, *i_head2, *next;
+//     for (i_head2 = head2->next; !list_empty(head2); i_head2 = next) {
+//         while (i_head != head &&
+//                strcmp(list_entry(i_head, element_t, list)->value,
+//                       list_entry(i_head2, element_t, list)->value) < 0) {
+//             i_head = i_head->next;
+//         }
+//         if (i_head == head)
+//             list_splice_tail_init(head2, i_head);
+//         else {
+//             next = i_head2->next;
+//             list_del_init(i_head2);
+//             list_add_tail(i_head2, i_head);
 //         }
 //     }
-//     return H1;
 // }
 
 /*
@@ -283,14 +297,12 @@ void q_reverse(struct list_head *head)
  */
 void q_sort(struct list_head *head)
 {
-    // if (head == NULL || list_empty(head) || list_is_singular(head))
-    //     return;
-    // if (list_sorted(head) == true)
-    //     return;
+    if (head == NULL || list_empty(head) || list_is_singular(head))
+        return;
 
-    // LIST_HEAD(head2);
-    // list_cut_position(&head2, head, q_get_mid(head));
-    // q_sort(head);
-    // q_sort(&head2);
-    // mergeTwoList(head, &head2);
+    LIST_HEAD(head2);
+    list_cut_position(&head2, head, q_get_mid(head));
+    q_sort(head);
+    q_sort(&head2);
+    merge(head, &head2);
 }
