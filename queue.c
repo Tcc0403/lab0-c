@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "harness.h"
 #include "queue.h"
@@ -282,3 +283,4 @@ void q_sort(struct list_head *head)
     q_sort(&tmp);
     mergeTwoLists(head, &tmp);
 }
+
